@@ -1,14 +1,22 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description:
   'only VPC'
+
 Resources:
   SampleVPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 192.168.0.0/20
+      CidrBlock: 10.0.0.0/20
       EnableDnsHostnames: 'true'
       EnableDnsSupport: 'true'
       InstanceTenancy: default
       Tags:
         - Key: Name
           Value: sapmle-vpc
+
+Outputs:
+  StackSampleVPC:
+    Description: The ID of the SampleVPC
+    Value: !Ref SampleVPC
+    Export:
+      Name: SampleVpcStack

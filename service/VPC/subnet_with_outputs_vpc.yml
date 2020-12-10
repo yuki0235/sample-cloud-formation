@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  'Subnet with outputs VPC'
+
+Resources:
+  SampleSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: "10.0.1.0/24"
+      VpcId: !ImportValue SampleVpcStack
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: sample-sabunet-1a
