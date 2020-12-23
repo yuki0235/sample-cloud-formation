@@ -229,3 +229,73 @@ Resources:
       # Volumes:
       #   - Device: /dev/xvda
       #     VolumeId: #TBD
+
+  # 起動テンプレート定義
+  LaunchTemplateForLive:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: launch-template-for-rails
+      LaunchTemplateData:
+        UserData: |
+          Fn::Base64:
+            #!/bin/bash -xe
+            yum update -y
+
+            echo "#---------------\n# yum install\n#---------------"
+            yum install -y \
+            git gcc gcc-c++ make \
+            openssl-devel readline-devel \
+            glibc-headers libyaml-devel \
+            zlib zlib-devel \
+            libffi-devel libxml2 libxslt \
+            libxml2-devel libxslt-devel \
+            mysql mysql-devel
+
+            echo "#---------------\n# nginx install\n#---------------"
+            amazon-linux-extras install -y nginx1
+            nginx -v
+
+            echo "#---------------\n# set up rails\n#---------------"
+            git clone git://github.com/rbenv/rbenv.git ~/.rbenv
+            echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+            echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+            source ~/.bashrc
+
+            git clone git://github.com/rbenv/ruby-build.git /tmp/ruby-build
+            cd /tmp/ruby-build
+            sudo ./install.sh
+
+            rbenv install 2.6.5
+            rbenv rehash
+            rbenv global 2.6.5
+            ruby -v
+            rbenv rehash
+
+            gem install bundler
+            bundler -v
+
+            gem install rails -v 6.0.3.4
+            rails -v
+
+            echo "#---------------\n# set up nvm\n#---------------"
+            cd ~
+            git clone https://github.com/creationix/nvm.git ~/.nvm
+            source ~/.nvm/nvm.sh
+
+            echo 'if [ -f ~/.nvm/nvm.sh ]; then' >> ~/.bashrc
+            echo '        . ~/.nvm/nvm.sh' >> ~/.bashrc
+            echo 'fi' >> ~/.bashrc
+
+            echo "#---------------\n# set up Node.js\n#---------------"
+            nvm install
+            node --version
+            npm --version
+
+            echo "#---------------\n# set up yarn\n#---------------"
+            npm install yarn -g
+            yarn --version
+
+            echo "#---------------\n# set up app\n#---------------"
+            sudo mkdir -p /var/www
+            cd /var/www
+            rails new sapmle-app
