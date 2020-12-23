@@ -1,0 +1,231 @@
+# ライブコーディング用のCloudFormationテンプレート
+# create stack: aws cloudformation create-stack --stack-name ForLiveCoding --template-body file://`pwd`/service/all.cf.yml
+# update stack: aws cloudformation update-stack --stack-name ForLiveCoding --template-body file://`pwd`/service/all.cf.yml
+# delete stack: aws cloudformation delete-stack --stack-name ForLiveCoding
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  'infrastructure for live coding'
+
+# ---------------
+# Parameters定義
+# ---------------
+Parameters:
+  VpcCIDR:
+    Description: IP range for VPC
+    Type: String
+    Default: 10.0.0.0/20
+  PublicSubnet1aCIDR:
+    Description: IP range for PublicSubnet1a
+    Type: String
+    Default: 10.0.0.0/24
+  PublicSubnet1cCIDR:
+    Description: IP range for PublicSubnet1c
+    Type: String
+    Default: 10.0.1.0/24
+  PrivateSubnet1aCIDR:
+    Description: IP range for PrivateSubnet1a
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnet1cCIDR:
+    Description: IP range for PrivateSubnet1c
+    Type: String
+    Default: 10.0.3.0/24
+  AllCIDR:
+    Description: IP range for all
+    Type: String
+    Default: 0.0.0.0/0
+
+
+# ---------------
+# Resources定義
+# ---------------
+Resources:
+  # VPC定義
+  VpcForLive:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VpcForLive
+
+  # インターネットゲートウェイ定義
+  InternetGatewayForLive:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: InternetGatewayForLive
+
+  # インターネットゲートウェイ-VPC関連付け定義
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGatewayForLive
+      VpcId: !Ref VpcForLive
+
+  # パブリックサブネット定義
+  PublicSubnetForLive1a:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref PublicSubnet1aCIDR
+      VpcId: !Ref VpcForLive
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PublicSubnetForLive1a
+  PublicSubnetForLive1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref PublicSubnet1cCIDR
+      VpcId: !Ref VpcForLive
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PublicSubnetForLive1c
+
+  # プライベートサブネット定義
+  PrivateSubnetForLive1a:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: !Ref PrivateSubnet1aCIDR
+      VpcId: !Ref VpcForLive
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetForLive1a
+  PrivateSubnetForLive1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      CidrBlock: !Ref PrivateSubnet1cCIDR
+      VpcId: !Ref VpcForLive
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetForLive1c
+
+  # セキュリティグループ定義
+  SecurityGroupForLive:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SecurityGroupForLive
+      GroupName: SecurityGroupForLive
+      SecurityGroupIngress:
+        - CidrIp: !Ref AllCIDR
+          Description: inbound for ssh
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - CidrIp: !Ref AllCIDR
+          Description: inbound for http
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      SecurityGroupEgress:
+        - CidrIp: !Ref AllCIDR
+          Description: outbound for all
+          FromPort: -1
+          IpProtocol: -1
+          ToPort: -1
+      VpcId: !Ref VpcForLive
+      Tags:
+        - Key: Name
+          Value: SecurityGroupForLive
+
+  # ルートテーブル定義
+  PublicRouteTableForLive:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VpcForLive
+      Tags:
+        - Key: Name
+          Value: PublicRouteTableForLive
+  DefaultPublicRouteTableForLive:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTableForLive
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGatewayForLive
+  PublicSubnet1RouteTableAssociationForLive:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableForLive
+      SubnetId: !Ref PublicSubnetForLive1a
+  PublicSubnet2RouteTableAssociationForLive:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTableForLive
+      SubnetId: !Ref PublicSubnetForLive1c
+
+  # EIP定義
+  EIPForLive:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: EIPForLive
+
+  #EIP-EC2関連定義
+  EIPToEC2ForLive:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      EIP: !Ref EIPForLive
+      InstanceId: !Ref EC2ForLive1a
+
+  # EC2インスタンス定義
+  EC2ForLive1a:
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: false
+      ImageId: ami-01748a72bed07727c
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: t2.micro
+      KeyName: raisetech-key
+      Monitoring: false
+      # NetworkInterfaces:
+      #   - NetworkInterface
+      SecurityGroupIds:
+        - !Ref SecurityGroupForLive
+      SourceDestCheck: true
+      SubnetId: !Ref PublicSubnetForLive1a
+      Tags:
+        - Key: Name
+          Value: EC2ForLive1a
+      Tenancy: default
+      # UserData: String
+      # Volumes:
+      #   - Device: /dev/xvda
+      #     VolumeId: #TBD
+  EC2ForLive1c:
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: false
+      ImageId: ami-01748a72bed07727c
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: t2.micro
+      KeyName: raisetech-key
+      Monitoring: false
+      # NetworkInterfaces:
+      #   - NetworkInterface
+      SecurityGroupIds:
+        - !Ref SecurityGroupForLive
+      SourceDestCheck: true
+      SubnetId: !Ref PublicSubnetForLive1c
+      Tags:
+        - Key: Name
+          Value: EC2ForLive1a
+      Tenancy: default
+      # UserData: String
+      # Volumes:
+      #   - Device: /dev/xvda
+      #     VolumeId: #TBD
