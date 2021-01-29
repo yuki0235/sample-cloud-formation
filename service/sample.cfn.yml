@@ -127,19 +127,13 @@ Resources:
       SubnetId: !Ref PublicSubnetForLive
 
   # EIP定義
-  EIPForLive:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-      Tags:
-        - Key: Name
-          Value: !Sub "EIP${CommonName}"
+  # 参照：/Users/yuto_nakanishi/work/CloudFormation/service/VPC/only_vpc.yml
 
   #EIP-EC2関連定義
   EIPToEC2ForLive:
     Type: AWS::EC2::EIPAssociation
     Properties:
-      EIP: !Ref EIPForLive
+      EIP: !ImportValue OutputEIP
       InstanceId: !Ref EC2ForLive
 
   # EC2インスタンス定義
@@ -152,8 +146,6 @@ Resources:
       InstanceType: t2.micro
       KeyName: raisetech-key
       Monitoring: false
-      # NetworkInterfaces:
-      #   - NetworkInterface
       SecurityGroupIds:
         - !Ref SecurityGroupForLive
       SourceDestCheck: true
@@ -162,7 +154,3 @@ Resources:
         - Key: Name
           Value: !Sub "EC2${CommonName}"
       Tenancy: default
-      # UserData: String
-      # Volumes:
-      #   - Device: /dev/xvda
-      #     VolumeId: #TBD
