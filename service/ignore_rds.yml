@@ -133,6 +133,11 @@ Resources:
           FromPort: 80
           IpProtocol: tcp
           ToPort: 80
+        - CidrIp: !Ref AllCIDR
+          Description: inbound for http
+          FromPort: 8080
+          IpProtocol: tcp
+          ToPort: 8080
       SecurityGroupEgress:
         - CidrIp: !Ref AllCIDR
           Description: outbound for all
