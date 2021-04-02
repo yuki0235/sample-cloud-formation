@@ -38,7 +38,7 @@ $ rails -v
 $ git clone https://github.com/creationix/nvm.git ~/.nvm
 $ source ~/.nvm/nvm.sh
 $ echo 'if [ -f ~/.nvm/nvm.sh ]; then' >> ~/.bashrc
-$ echo '        . ~/.nvm/nvm.sh' >> ~/.bashrc
+$ echo '  . ~/.nvm/nvm.sh' >> ~/.bashrc
 $ echo 'fi' >> ~/.bashrc
 
 # Node.jsの設定
