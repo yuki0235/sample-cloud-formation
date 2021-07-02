@@ -1,3 +1,8 @@
+# ライブコーディング用のCloudFormationテンプレート
+# create stack: aws cloudformation create-stack --stack-name EipForLiveCoding --template-body file://`pwd`/service/EIP/only_eip.yml
+# update stack: aws cloudformation update-stack --stack-name EipForLiveCoding --template-body file://`pwd`/service/EIP/only_eip.yml
+# delete stack: aws cloudformation delete-stack --stack-name EipForLiveCoding
+
 AWSTemplateFormatVersion: '2010-09-09'
 Description:
   'Ensure Output EIP'
