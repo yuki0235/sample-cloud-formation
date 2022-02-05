@@ -35,6 +35,14 @@ Parameters:
     Description: IP range for all
     Type: String
     Default: 0.0.0.0/0
+  CommonPublicName:
+    Description: Common Tag Name
+    Type: String
+    Default: PublicSubnetForLive
+  CommonPrivateName:
+    Description: Common Tag Name
+    Type: String
+    Default: PrivateSubnetForLive
 
 
 # ---------------
@@ -78,7 +86,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: PublicSubnetForLive1a
+          Value: !Sub "${CommonPublicName}a"
   PublicSubnetForLive1c:
     Type: AWS::EC2::Subnet
     Properties:
@@ -88,7 +96,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: PublicSubnetForLive1c
+          Value: !Sub "${CommonPublicName}c"
 
   # プライベートサブネット定義
   PrivateSubnetForLive1a:
@@ -100,7 +108,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: PrivateSubnetForLive1a
+          Value: !Sub "${CommonPrivateName}a"
   PrivateSubnetForLive1c:
     Type: AWS::EC2::Subnet
     Properties:
@@ -110,7 +118,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: PrivateSubnetForLive1c
+          Value: !Sub "${CommonPrivateName}c"
 
   # セキュリティグループ定義
   SecurityGroupForLive:
